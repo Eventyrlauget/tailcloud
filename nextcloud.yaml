@@ -1,10 +1,10 @@
 ---
 version: "3.7"
 services:
-  ts-authkey-test:
+  nextcloud:
     image: tailscale/tailscale:latest
     container_name: ts-authkey-test
-    hostname: authkey-test
+    hostname: nextcloud
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_STATE_DIR=/var/lib/talscale
@@ -16,10 +16,10 @@ services:
       - sys_module
     restart: unless-stopped
 
-  nextcloud:
+  nextcloud-app:
     image: nextcloud:latest
     volumes:
       - ./nextcloud_data:/var/www/html
     environment: []
-    network_mode: "service:ts-authkey-test"
+    network_mode: "service:nextcloud"
     restart: unless-stopped
