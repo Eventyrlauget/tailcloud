@@ -4,22 +4,63 @@ services:
   nextcloud:
     image: tailscale/tailscale:latest
     container_name: ts-authkey-test
-    hostname: nextcloud
+    hostname: next-test
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_STATE_DIR=/var/lib/talscale
+#      - TS_EXTRA_ARGS=--advertise-tags=tag:services
+      - TZ=Europe/Oslo
     volumes:
-      - ${PWD}/tailscale:/var/lib/tailscale
+      - tailscale:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
       - sys_module
     restart: unless-stopped
+    
+  tsdns:
+    container_name: tsdns
+    image: ghcr.io/marc1307/tailscale-cloudflare-dnssync:v1.1.5
+    restart: unless-stopped
+    environment:
+      - cf-key=${CFKEY}
+      - cf-domain=${CFDOMAIN}
+      - ts-key=${TSKEY}
+      - ts-tailnet=${TSTAILNET}
+      - TZ=Europe/Oslo
 
   nextcloud-app:
     image: nextcloud:latest
     volumes:
-      - ./nextcloud_data:/var/www/html
-    environment: []
+      - nextcloud_data:/var/www/html
+    environment:
+      - TZ=Europe/Oslo
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER} # replace with the admin username
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD} # replace with a stronger passwordin a .env file
+      - NEXTCLOUD_TRUSTED_DOMAINS="next-test.${CFDOMAIN}" # test.schmuud.no" # replace with your domain(s)
+#      - TRUSTED_PROXIES=192.168.0.0/16 172.16.0.0/12 10.0.0.0/8
+      - APACHE_DISABLE_REWRITE_IP=1
+      - MYSQL_HOST=mydb
+      - MYSQL_DATABASE=nc
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD} # set a stronger password in a .env file
     network_mode: "service:nextcloud"
     restart: unless-stopped
+
+  mydb:
+    image: mariadb:10.9
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      - TZ=Europe/Oslo
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} # replace with a stronger password
+      - MYSQL_DATABASE=nc
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD} # set a stronger password in a .env file
+
+# Consider using directories instead of volumes for easier backups
+volumes:
+  db-data:
+  nextcloud_data:
+  tailscale:
