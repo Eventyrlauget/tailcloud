@@ -4,7 +4,7 @@ services:
   nextcloud:
     image: tailscale/tailscale:latest
     container_name: ts-authkey-test
-    hostname: next-test
+    hostname: nextcloud
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_STATE_DIR=/var/lib/talscale
