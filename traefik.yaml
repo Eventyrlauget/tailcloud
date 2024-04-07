@@ -1,0 +1,78 @@
+---
+services: 
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    networks:
+      - proxy
+    command:
+      - "--api=true"
+      - "--api.dashboard=true"
+      # - "--api.debug=true"
+      # - "--log.level=DEBUG"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.http.http.redirections.entryPoint.to=https"
+      - "--entrypoints.http.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.https.address=:443"
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
+      - "--certificatesResolvers.cloudflare.acme.email=${CF_API_EMAIL}"
+      - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.delaybeforecheck=2"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      # Comment out or delete next line in "production"
+#      - --certificatesresolvers.cloudflare.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`dash.${ROOT_DOMAIN}`)"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`dash.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=${ROOT_DOMAIN}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${ROOT_DOMAIN}"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - "traefik.http.services.traefik-secure.loadbalancer.server.port=80"
+
+    environment:
+      - CF_DNS_API_TOKEN=${CF_API_TOKEN}
+      - TZ=Europe/Oslo
+
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+
+# TODO: look into using this or other container to simplify setup
+#       (requirements: log into, tailnet, and update cloudflare with tailscale IP)
+#   traefik-ts-proxy:
+#     image: tailscale/tailscale:latest
+#     container_name: ts-authkey-test
+#     hostname: traefik-ts-proxy
+#     environment:
+#       - TS_AUTHKEY=${TS_AUTHKEY}
+#       - TS_STATE_DIR=/var/lib/talscale
+# #      - TS_EXTRA_ARGS=--advertise-tags=tag:services
+#       - TZ=Europe/Oslo
+#     volumes:
+#       - tailscale:/var/lib/tailscale
+#       - /dev/net/tun:/dev/net/tun
+#     cap_add:
+#       - net_admin
+#       - sys_module
+#     restart: unless-stopped
+
+# # Consider using directories instead of volumes for easier backups
+# volumes:
+#   tailscale:

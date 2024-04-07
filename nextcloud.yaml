@@ -1,57 +1,66 @@
 ---
-version: "3.7"
 services:
-  nextcloud:
-    image: tailscale/tailscale:latest
-    container_name: ts-authkey-test
-    hostname: nextcloud
-    environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_STATE_DIR=/var/lib/talscale
-#      - TS_EXTRA_ARGS=--advertise-tags=tag:services
-      - TZ=Europe/Oslo
-    volumes:
-      - tailscale:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
-    
-  tsdns:
-    container_name: tsdns
-    image: ghcr.io/marc1307/tailscale-cloudflare-dnssync:v1.1.5
-    restart: unless-stopped
-    environment:
-      - cf-key=${CFKEY}
-      - cf-domain=${CFDOMAIN}
-      - ts-key=${TSKEY}
-      - ts-tailnet=${TSTAILNET}
-      - TZ=Europe/Oslo
 
-  nextcloud-app:
+  nextcloud:
     image: nextcloud:latest
+    container_name: nextcloud
+    hostname: nextcloud
     volumes:
       - nextcloud_data:/var/www/html
+    restart: unless-stopped
+    ports:
+      - 8081:80
+    networks:
+      - proxy
+    depends_on:
+      - mydb
+      - redis
     environment:
       - TZ=Europe/Oslo
-      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER} # replace with the admin username
-      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD} # replace with a stronger passwordin a .env file
-      - NEXTCLOUD_TRUSTED_DOMAINS="next-test.${CFDOMAIN}" # test.schmuud.no" # replace with your domain(s)
-#      - TRUSTED_PROXIES=192.168.0.0/16 172.16.0.0/12 10.0.0.0/8
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - NEXTCLOUD_TRUSTED_DOMAINS="nc.${ROOT_DOMAIN}"
+      - NC_maintenance_window_start=1
+      - NC_default_phone_region=no
+      - NC_default_language=en
+      - NC_default_locale=nb_NO
+      - TRUSTED_PROXIES=192.168.0.0/16 172.16.0.0/12 10.0.0.0/8
       - APACHE_DISABLE_REWRITE_IP=1
       - MYSQL_HOST=mydb
       - MYSQL_DATABASE=nc
       - MYSQL_USER=user
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD} # set a stronger password in a .env file
-    network_mode: "service:nextcloud"
-    restart: unless-stopped
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.entrypoints=http"
+      - "traefik.http.routers.nextcloud.rule=Host(`nc.${ROOT_DOMAIN}`)"
+      - "traefik.http.middlewares.nextcloud-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.nc-header.headers.customFrameOptionsValue=SAMEORIGIN"
+      - "traefik.http.middlewares.nc-header.headers.customResponseHeaders.Strict-Transport-Security=15552000"
+      - "traefik.http.middlewares.nc-rep.redirectregex.regex='https://(.*)/.well-known/(?:card|cal)dav'"
+      - "traefik.http.middlewares.nc-rep.redirectregex.replacement='https://$${1}/remote.php/dav'"
+      - "traefik.http.middlewares.nc-rep.redirectregex.permanent=true"
+      - "traefik.http.routers.nextcloud.middlewares=nc-header,nextcloud-https-redirect"
+      - "traefik.http.routers.nextcloud-secure.entrypoints=https"
+      - "traefik.http.routers.nextcloud-secure.rule=Host(`nc.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.nextcloud-secure.tls=true"
+      - "traefik.http.routers.nextcloud-secure.service=nextcloud"
+      - "traefik.http.routers.nextcloud-secure.middlewares=nc-rep,nc-header"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "traefik.http.services.nextcloud.loadbalancer.passHostHeader=true"
+      - "traefik.docker.network=proxy"
 
   mydb:
-    image: mariadb:10.9
+    image: mariadb:11.3.2
+    container_name: mydb
+    hostname: mydb
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
       - db-data:/var/lib/mysql
+    networks:
+      - proxy
     environment:
       - TZ=Europe/Oslo
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} # replace with a stronger password
@@ -59,8 +68,19 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=${MYSQL_PASSWORD} # set a stronger password in a .env file
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - proxy
+
 # Consider using directories instead of volumes for easier backups
 volumes:
   db-data:
   nextcloud_data:
-  tailscale:
+
+networks:
+  nc:
