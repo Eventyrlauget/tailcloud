@@ -1,4 +1,4 @@
-# Quick and easy nextcloud on tailscale
+# Quick and easy nextcloud++ on tailscale
 
 ## TL;DR
 
@@ -10,11 +10,16 @@
 
 2. Here is what you need to configure:
 
-Copy the `env.example` to `.env`, and fill in the enviroment variables.
+- Copy the `env.example` to `.env`, and fill in the enviroment variables.
+- Set up Tailscale client on server and find its tailnet ip. (TODO: make this automatic)
+- Set up a cloudflare root domain to point to the tailscale ip. (TODO: make this automatic)
+- Set up a cloudflare wildcard domain to point to the root domain.
 
 3. Profit
 
-`docker compose -f nextcloud.yaml up -d`
+`docker compose up -d`
+
+(service "stacks" to start are listed in the `docker-compose.yaml` file)
 
 
 ## Longer description

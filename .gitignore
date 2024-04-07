@@ -1,2 +1,4 @@
 .env
+.htpasswd
 nextcloud_data
+letsencrypt

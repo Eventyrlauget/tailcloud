@@ -1,0 +1,7 @@
+include:
+  - httpd.yaml # simple http service to test traefik
+  - traefik.yaml
+  - nextcloud.yaml
+
+networks:
+  proxy:
