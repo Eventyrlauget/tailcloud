@@ -19,7 +19,12 @@
 
 `docker compose up -d`
 
-(service "stacks" to start are listed in the `docker-compose.yaml` file)
+First start-up of nextcloud will trigger istallation script, give it a few minutes to complete.
+(if you get `bad gateway`, wait a few minutes and try again.)
+
+4. Note
+
+service "stacks" to start are listed in the `docker-compose.yaml` file
 
 
 ## Longer description
