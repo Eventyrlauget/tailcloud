@@ -8,3 +8,4 @@ https://github.com/techno-tim/techno-tim.github.io/tree/master/reference_files/t
 [x] Verify that cert is recived from letsencrypt staging before setting to production.
 [ ] clean up the comments and such. especially the enviroment variables used in nextcloud.yaml
 [ ] Modify or find new container to update ROOT_DOMAIN to point to traefik. (cf domain is set so *.ROOT_DOMAIN goes to ROOT_DOMAIN)
+[ ] Set all directories set by enviroment variables to include the last "/". it makes missing variable fail louder.

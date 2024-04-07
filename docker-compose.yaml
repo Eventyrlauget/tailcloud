@@ -1,7 +1,9 @@
 include:
-  - httpd.yaml # simple http service to test traefik
   - traefik.yaml
   - nextcloud.yaml
+  - metube.yaml
+  - mealie.yaml
+  - audiobookshelf.yaml
 
 networks:
   proxy:

@@ -1,0 +1,27 @@
+services:
+  metube:
+    container_name: metube
+    image: ghcr.io/alexta69/metube:latest
+    restart: unless-stopped
+    networks:
+      - proxy
+    environment:
+      TZ: "Europe/Oslo"
+      PUID: ${CONTAINER_USER_ID}
+      PGID: ${CONTAINER_GROUP_ID}
+      UMASK_SET: "002"
+      DARK_MODE: true
+      YTDL_OPTIONS: '{"writesubtitles":true,"writeautomaticsub":true,"subtitleslangs":["en","en-us","en-ttv","uk","en-uk","en-ca","en-nz","en-au","no","no-ttv","no-nor","nb","nb-nor","nb-ttv","nn","nn-ttv","nn-nor","nor","es","-live_chat"],"postprocessors":[{"key":"FFmpegEmbedSubtitle","already_have_subtitle":false},{"key":"FFmpegMetadata","add_chapters":true}]}'
+    volumes:
+      - ${DIRICTORY_CONFIGURED_TO_BACKUP}/metube-data:/downloads"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ytdl.entrypoints=http"
+      - "traefik.http.routers.ytdl.rule=Host(`ytdl.${ROOT_DOMAIN}`)"
+      - "traefik.http.middlewares.ytdl-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.ytdl.middlewares=ytdl-https-redirect"
+      - "traefik.http.routers.ytdl-secure.entrypoints=https"
+      - "traefik.http.routers.ytdl-secure.rule=Host(`ytdl.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.ytdl-secure.tls=true"
+      - "traefik.http.routers.ytdl-secure.service=ytdl"
+      - "traefik.http.services.ytdl.loadbalancer.server.port=8081"

@@ -1,0 +1,28 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf
+    restart: unless-stopped
+    container_name: audiobookshelf
+    networks:
+      - proxy
+    environment:
+      - PUID=${CONTAINER_USER_ID}
+      - PGID=${CONTAINER_GROUP_ID}
+      - UMASK_SET=002
+      - TZ=Europe/Oslo
+    volumes:
+      - "${BACKED_UP_MEDIA}/Audiobooks:/Audiobooks"
+      - "${BACKED_UP_MEDIA}/Podcasts:/Podcasts"
+      - "${DIRICTORY_CONFIGURED_TO_BACKUP}/audioserve-metadata:/metadata"
+      - "${DIRICTORY_CONFIGURED_TO_BACKUP}/audioserve-config:/config"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lydbok.entrypoints=http"
+      - "traefik.http.routers.lydbok.rule=Host(`lydbok.${ROOT_DOMAIN}`)"
+      - "traefik.http.middlewares.lydbok-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.lydbok.middlewares=lydbok-https-redirect"
+      - "traefik.http.routers.lydbok-secure.entrypoints=https"
+      - "traefik.http.routers.lydbok-secure.rule=Host(`lydbok.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.lydbok-secure.tls=true"
+      - "traefik.http.routers.lydbok-secure.service=lydbok"
+      - "traefik.http.services.lydbok.loadbalancer.server.port=80"
