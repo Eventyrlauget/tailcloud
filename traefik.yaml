@@ -52,7 +52,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./letsencrypt:/letsencrypt
+      - ${DIRICTORY_CONFIGURED_TO_BACKUP}/letsencrypt:/letsencrypt
 
 # TODO: look into using this or other container to simplify setup
 #       (requirements: log into, tailnet, and update cloudflare with tailscale IP)

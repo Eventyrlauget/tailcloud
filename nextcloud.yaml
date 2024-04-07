@@ -6,7 +6,7 @@ services:
     container_name: nextcloud
     hostname: nextcloud
     volumes:
-      - nextcloud_data:/var/www/html
+      - ${DIRICTORY_CONFIGURED_TO_BACKUP}/nextcloud_data:/var/www/html
     restart: unless-stopped
     ports:
       - 8081:80
@@ -58,7 +58,7 @@ services:
     hostname: mydb
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
-      - db-data:/var/lib/mysql
+      - ${DIRICTORY_CONFIGURED_TO_BACKUP}/db-data:/var/lib/mysql
     networks:
       - proxy
     environment:
@@ -76,11 +76,6 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - proxy
-
-# Consider using directories instead of volumes for easier backups
-volumes:
-  db-data:
-  nextcloud_data:
 
 networks:
   nc:
