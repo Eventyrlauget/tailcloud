@@ -2,7 +2,7 @@
 services:
 
   nextcloud:
-    image: nextcloud:latest
+    image: nextcloud:28
     container_name: nextcloud
     hostname: nextcloud
     volumes:
