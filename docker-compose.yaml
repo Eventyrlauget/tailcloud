@@ -5,6 +5,7 @@ include:
   - mealie.yaml
   - audiobookshelf.yaml
   - pdf.yaml
+  - jellyfin.yaml
 
 networks:
   proxy:
