@@ -1,0 +1,18 @@
+name: Docker Compose Config Check
+
+on:
+ pull_request:
+    branches:
+      - main # Adjust this to your default branch if different
+
+jobs:
+ docker-compose-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Docker Compose Config
+      run: docker compose config
+
