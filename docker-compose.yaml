@@ -4,6 +4,7 @@ include:
   - metube.yaml
   - mealie.yaml
   - audiobookshelf.yaml
+  - pdf.yaml
 
 networks:
   proxy:

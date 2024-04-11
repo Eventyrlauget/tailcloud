@@ -1,0 +1,26 @@
+services:
+  stirling-pdf:
+    image: frooodle/s-pdf:latest
+    container_name: stirling-pdf
+    restart: unless-stopped
+    networks:
+      - proxy
+    volumes:
+      - /location/of/trainingData:/usr/share/tessdata #Required for extra OCR languages
+      - ${DIRICTORY_CONFIGURED_TO_BACKUP}/stirling-pdf-config:/configs
+#      - /location/of/customFiles:/customFiles/
+#      - /location/of/logs:/logs/
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirling-pdf.entrypoints=http"
+      - "traefik.http.routers.stirling-pdf.rule=Host(`pdf.${ROOT_DOMAIN}`)"
+      - "traefik.http.middlewares.stirling-pdf-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.stirling-pdf.middlewares=stirling-pdf-https-redirect"
+      - "traefik.http.routers.stirling-pdf-secure.entrypoints=https"
+      - "traefik.http.routers.stirling-pdf-secure.rule=Host(`pdf.${ROOT_DOMAIN}`)"
+      - "traefik.http.routers.stirling-pdf-secure.tls=true"
+      - "traefik.http.routers.stirling-pdf-secure.service=stirling-pdf"
+      - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
