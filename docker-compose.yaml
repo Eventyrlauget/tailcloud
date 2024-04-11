@@ -1,10 +1,5 @@
 include:
   - traefik.yaml
-  - nextcloud.yaml
-  - metube.yaml
-  - mealie.yaml
-  - audiobookshelf.yaml
-  - pdf.yaml
   - jellyfin.yaml
 
 networks:
