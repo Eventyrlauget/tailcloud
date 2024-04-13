@@ -9,8 +9,6 @@ services:
 #    network_mode: 'host' # only needed for DLNA
     networks:
       - proxy
-    ports:
-      - 8016:8096
     volumes:
       - "${DIRICTORY_CONFIGURED_TO_BACKUP}/jellyfin-config:/config"
       - "/tmp/jellyfin-cache:/cache"
