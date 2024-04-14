@@ -1,6 +1,11 @@
 include:
   - traefik.yaml
   - jellyfin.yaml
+  - nextcloud.yaml
+  - metube.yaml
+  - pdf.yaml
+  - mealie.yaml
+  - audiobookshelf.yaml
 
 networks:
   proxy:
